@@ -1,237 +1,191 @@
-import Candidato from "../model/canditato.js"
+import Candidato from '../model/canditato.js'
 
-export default class Teclado {
-
+class urnaController {
     constructor() {
 
-        this.teclado = document.querySelectorAll('.botao-numerico')
-        this.tecladoDeAcao = document.querySelectorAll('.botao-acao')
-        this.primeiroNumero = document.querySelector('.primeiro-numero')
-        this.segundoNumero = document.querySelector('.segundo-numero')
-        this.telaEL = document.querySelector('.tela')
+        this.tecladoNumericoEL = document.querySelectorAll('.botao-numerico')
+        this.tecladoDeAcoesEL = document.querySelectorAll('.botao-acao')
         this.visorEL = document.querySelector('.visor')
+        this.visorConfirmacaoEL = document.querySelector('.visor-confirmacao')
+        this.primeiroInputNumericoEl = document.querySelector('.primeiro-numero')
+        this.segundoInputNumericoEl = document.querySelector('.segundo-numero')
         this.visorCandidatoEL = document.querySelector('.visorCandidato')
-        this.telaConfirmacao = document.querySelector('.visor-confirmacao')
         this.botaoBrancoEL = document.querySelector('.botao-branco')
-        this.candidatoVotadoEL = document.querySelector('.nome-candidato')
-        this.visorConfirmacaoCandidato = document.querySelector('.visor-confirmacao-candidato')
+        this.visorConfirmacaoCandidatoEL = document.querySelector('.visor-confirmacao-candidato')
 
-        this.candidatos = [
-            new Candidato('Darth Vader', 'SITH', 99, '../../img/darthVader.png'),
-            new Candidato('Obi Wan Kenobi', 'JEDI', 50, '../../img/obiWan.png'),
-            new Candidato('Leia Organa', 'RESISTENCIA', 30, '../../img/leiaOrgana-removebg-preview.png')
-        ]
 
-        this.observadorTecladoNumerico()
-        this.observadorTecladoAcao()
         this.criarCandidatos()
+        this.observadorTecladoNumerico()
+        this.observadorTecladodeAcoes()
+
+    }
+
+    limparInputs() {
+        this.primeiroInputNumericoEl.innerText = ''
+        this.segundoInputNumericoEl.innerText = ''
+    }
+
+    iniciarProcesso(parametro) {
+
+        if (parametro === "BRANCO") {
+
+            let confirmacao = confirm(`tem certeza que deseja votar em ${parametro}`)
+
+            if (confirmacao) {
+
+                this.visorEL.style.display = 'none'
+                this.visorConfirmacaoEL.style.display = 'block'
+
+                setTimeout(() => {
+                    this.visorConfirmacaoEL.style.display = 'none'
+                    this.visorEL.style.display = 'flex'
+                }, 4000);
+
+                this.limparInputs()
+            }
+
+        }
+
+        if (parametro === 'CORRIGE') {
+            
+            this.visorCandidatoEL.style.display = 'none'
+
+            this.limparInputs()
+
+            this.visorEL.style.display = 'flex'
+
+            this.botaoBrancoEL.style.display = 'flex'
+        }
+
+        if (parametro === "CONFIRMA") {
+
+            this.visorConfirmacaoCandidatoEL.innerHTML = `
+            <div>
+                <h1>
+                 Obrigado por votar, seu voto para Presidente da Galáxia foi computado.
+                </h1>
+            </div>
+            `
+
+            this.visorEL.style.display = 'none'
+            this.visorCandidatoEL.style.display = 'none'
+            this.visorConfirmacaoCandidatoEL.style.display = 'block'
+
+            setTimeout(() => {
+                this.visorConfirmacaoCandidatoEL.style.display = 'none'
+                this.visorEL.style.display = 'flex'
+                this.botaoBrancoEL.style.display = 'flex'
+            }, 4000);
+
+            this.limparInputs()
+
+        }
+
+        if (typeof (parametro) === 'number') {
+
+            let primeiroInput = this.primeiroInputNumericoEl
+            let segundoInput = this.segundoInputNumericoEl
+
+            if (primeiroInput.innerText == "") {
+                primeiroInput.innerText = parametro
+            } else {
+                segundoInput.innerText = parametro
+
+                let votoMontado = Object.assign({}, [this.primeiroInputNumericoEl.innerText, this.segundoInputNumericoEl.innerText])
+
+                this.renderizarCandidatos(votoMontado)
+            }
+        }
+
+    }
+
+    renderizarCandidatos(parametro) {
+
+        let votoComputado = ''
+        let candidatosExistentes = this.buscarCandidatos()
+        let candidatoVotado = ''
+
+        for (const key in parametro) {
+            votoComputado += parametro[key]
+        }
+
+        candidatosExistentes.map(candidato => {
+            if (candidato.numero == votoComputado) {
+                candidatoVotado = candidato
+            }
+        })
+
+        this.visorCandidatoEL.innerHTML = `
+         <div class = 'titulo-do-visor'>
+            <h1 style = 'width: 70%'>Presidente da Galáxia</h1>
+            <img  src = ${candidatoVotado.img} style = 'width: 20%'>
+         </div>
+         <hr>
+         <div style = 'margin: 15px;'> 
+            <span>Nome do candidato: ${candidatoVotado.nome} </span>
+         </div >
+         <div style = 'margin: 15px;'> 
+            <span>Numero do candidato: ${candidatoVotado.numero} </span>
+         </div>
+         <div style = 'margin: 15px;'> 
+            <span>Legenda do candidato: ${candidatoVotado.legenda} </span>
+         </div>
+         <hr>
+         <div>
+            <h2> 
+                Aperte CORRIGE para REINICAR seu voto
+            </h2>
+            <h2> 
+                Aperte CONFIRMAR para CONCLUIR seu voto
+            </h2>
+         </div>
+        
+        `
+
+        this.visorEL.style.display = 'none'
+        this.visorCandidatoEL.style.display = 'block'
+        this.botaoBrancoEL.style.display = 'none'
 
     }
 
     observadorTecladoNumerico() {
 
-        let botaoValor = null
-
-        this.teclado.forEach(botao => {
-
+        this.tecladoNumericoEL.forEach(botao => {
             botao.addEventListener('click', e => {
+                let parametroNumerico = Number(e.target.innerText)
 
-                botaoValor = e.target.innerText
-
-                this.iniciarProcesso(Number(botaoValor))
-
+                this.iniciarProcesso(parametroNumerico)
             })
+        })
 
-        });
     }
 
-    observadorTecladoAcao() {
-
-        let acao = null
-
-        this.tecladoDeAcao.forEach(botao => {
-
+    observadorTecladodeAcoes() {
+        this.tecladoDeAcoesEL.forEach(botao => {
             botao.addEventListener('click', e => {
-
-                acao = e.target.innerText
-
-                this.iniciarProcesso(acao)
+                let parametro = e.target.innerText
+                this.iniciarProcesso(parametro)
             })
-
-        });
-
-    }
-
-    iniciarProcesso(parametro) {
-
-        let input = this.primeiroNumero
-        let segundoInput = this.segundoNumero
-        let parametroNumerico = typeof (parametro)
-        let voto = null
-
-        console.log(parametroNumerico)
-
-        if (typeof (parametro) == "number") {
-            console.log(input)
-            if (input.innerText == "") {
-                input.innerHTML = parametro
-            } else {
-                segundoInput.innerHTML = parametro
-                voto = Object.assign({}, [input.innerText, segundoInput.innerText])
-                this.renderizarCandidato(voto)
-            }
-        } else {
-            if (parametro === 'BRANCO') {
-                let confirmacao = confirm("Deseja confirmar seu voto em BRANCO?")
-                if (confirmacao) {
-                    this.visorEL.style.display = 'none'
-                    this.telaConfirmacao.style.display = 'block'
-                    setTimeout(() => {
-                        this.telaConfirmacao.style.display = 'none'
-                        this.visorEL.style.display = 'flex'
-                    }, 3000);
-                }
-            }
-            if (parametro === 'CORRIGE') {
-                this.visorCandidatoEL.style.display = 'none'
-                this.visorEL.style.display = 'flex'
-                this.botaoBrancoEL.style.display = 'flex'
-
-                this.limparVoto()
-            }
-            if (parametro === 'CONFIRMA') {
-                this.visorConfirmacaoCandidato.innerHTML = `
-                <div>
-                    <h1>
-                        Obrigado por votar, seu voto para Presidente da Galáxia foi computado.
-                    </h1>
-                </div>
-                `
-                this.visorCandidatoEL.style.display = 'none'
-                this.visorConfirmacaoCandidato.style.display = 'flex'
-            
-                setTimeout(() => {
-                    this.visorConfirmacaoCandidato.style.display = 'none'
-                    this.visorEL.style.display = 'flex'
-                    this.botaoBrancoEL.style.display = 'flex'
-                }, 3000);
-
-                this.limparVoto()
-            }
-        }
-
-
-
-
-
-
-    }
-
-    renderizarCandidato(parametro) {
-
-        let voto = ""
-
-        for (const key in parametro) {
-            voto += parametro[key]
-        }
-
-        switch (voto.length) {
-            case 2:
-
-                let candidatoEncontrado = null
-
-                this.buscarCandidatos().map(candidato => {
-                    for (const key in candidato) {
-                        (voto == candidato.numero) ? candidatoEncontrado = candidato: false
-                    }
-                })
-
-                console.log(candidatoEncontrado)
-
-
-
-                this.visorCandidatoEL.innerHTML =
-                    `<div class="info-candidato">
-                <div class="titulo-info">
-                    <h1>
-                        INFORMAÇÕES DO VOTO:
-                    </h1>
-                </div>
-                <div class="titulo-candidato">
-                    <h1>
-                       PRESIDENTE DA GALÁXIA
-                    </h1>
-                </div>
-                <div class = "foto-candidato">
-                    <img class="img-candidato" src= ${candidatoEncontrado.img} alt = "teste" img>
-                </div>
-                <div class="numero-candidato">
-                    <h2>
-                        Número:
-                    </h2>
-                    <span class="input-do-numero">
-                        ${voto[0]}
-                    </span>
-                    <span class="input-do-numero">
-                        ${voto[1]}
-                    </span>
-                </div>
-                <div class="nome-do-candidato">
-                    <h2>
-                        Nome: 
-                    </h2>
-                    <span class="nome-candidato">
-                        ${candidatoEncontrado.nome}
-                    </span>
-                </div>
-                <div class="partido-do-candidato">
-                    <h2>
-                        Partido:
-                    </h2>
-                    <span class="partido-candidato">
-                        ${candidatoEncontrado.legenda}
-                    </span>
-                </div>
-                <hr>
-                <div class="orientacoes">
-                    <h2>
-                        Aperte a tecla:
-                    </h2>
-                    <h2>
-                        VERDE para CONFIRMAR seu voto
-                    </h2>
-                    <h2>
-                        LARANJA para REINICIAR seu voto
-                    </h2>
-                </div>
-            </div>
-                `
-                this.botaoBrancoEL.style.display = 'none'
-                this.visorEL.style.display = 'none'
-                this.visorCandidatoEL.style.display = 'flex'
-
-                break;
-
-            default:
-                break;
-        }
-
+        })
     }
 
     criarCandidatos() {
-        localStorage.setItem('candidatos', JSON.stringify(this.candidatos))
+
+        let candidatos = [
+            new Candidato('Darth Vader', 'sith', '99', '../../img/darthVader.png'),
+            new Candidato('Leia Organa', 'resistencia', '30', '../../img/leiaOrgana-removebg-preview.png'),
+            new Candidato('Obi Wan Kenobi', 'jedi', '50', '../../img/obiWan.png')
+        ]
+
+        localStorage.setItem('candidatos', JSON.stringify(candidatos))
     }
 
     buscarCandidatos() {
-        let candidatos = JSON.parse(localStorage.getItem('candidatos'))
-        return candidatos
-    }
+        let canditatosBuscados = JSON.parse(localStorage.getItem('candidatos'))
 
-    limparVoto() {
-        this.primeiroNumero.innerText = ''
-        this.segundoNumero.innerText = ''
+        return canditatosBuscados
     }
 
 }
 
-window.App = new Teclado()
+window.App = new urnaController()

@@ -224,3 +224,8 @@ body>div>div>div {
 .visor-confirmacao-candidato>div>h1{
     text-align: center;
 }
+
+.titulo-do-visor{
+    display: flex;
+    flex-direction: row;
+}
